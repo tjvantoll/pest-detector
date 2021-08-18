@@ -2,6 +2,7 @@
 # https://towardsdatascience.com/detecting-animals-in-the-backyard-practical-application-of-deep-learning-c030d3263ba8
 # https://github.com/microsoft/CameraTraps
 # https://github.com/dddjjjbbb/Grunz/blob/main/main.py
+import keys
 import json
 import os
 import notecard
@@ -67,8 +68,8 @@ def send_to_notehub():
   req["sync"] = True
   req["body"] = {
     "body": "Spotted an animal!",
-    "from": "+18645394779",
-    "to": "+17343066002",
+    "from": keys.sms_from,
+    "to": keys.sms_to,
   }
   res = card.Transaction(req)
   print(res)
@@ -89,6 +90,3 @@ def main():
     send_to_notehub(ml_result['confidence'])
   else:
     os.remove(image_name)
-
-image_name = take_picture()
-process_single_image(image_name)
