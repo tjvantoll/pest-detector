@@ -1,17 +1,13 @@
-# https://www.hackster.io/rob-lauer/remote-birding-with-tensorflow-lite-and-raspberry-pi-8c4fcc
-# https://towardsdatascience.com/detecting-animals-in-the-backyard-practical-application-of-deep-learning-c030d3263ba8
-# https://github.com/microsoft/CameraTraps
-# https://github.com/dddjjjbbb/Grunz/blob/main/main.py
 import keys
-import json
 import os
 import notecard
 from pathlib import Path
 from periphery import I2C
 import picamera
-import time
+import RPi.GPIO as GPIO
 from run_tf_detector import load_and_run_detector
 from run_tf_detector_batch import load_and_run_detector_batch, write_results_to_file
+import time
 
 notehub_uid = 'com.blues.tvantoll:pestcontrol'
 port = I2C("/dev/i2c-1")
@@ -19,6 +15,10 @@ card = notecard.OpenI2C(port, 0, 0)
 
 model = './md_v4.1.0'
 model = ''.join([str(f) for f in Path('.').rglob('*.pb')])
+
+pir_sensor_pin = 4
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(pir_sensor_pin, GPIO.IN)
 
 def process_image(file_name):
   output_path = './output.json'
@@ -52,6 +52,7 @@ def take_picture():
   image_name = get_image_name()
   camera.capture(image_name)
   camera.stop_preview()
+  camera.close()
   return image_name
 
 def init_notecard():
@@ -62,12 +63,12 @@ def init_notecard():
   res = card.Transaction(req)
   print(res)
 
-def send_to_notehub():
+def send_to_notehub(confidence):
   req = {"req": "note.add"}
   req["file"] = "twilio.qo"
   req["sync"] = True
   req["body"] = {
-    "body": "Spotted an animal!",
+    "body": "Spotted an animal with " + confidence + "% confidence",
     "from": keys.sms_from,
     "to": keys.sms_to,
   }
@@ -80,13 +81,21 @@ def is_animal_image(ml_result):
       return True
   return False
 
-# init_notecard()
-
 def main():
-  image_name = take_picture()
-  ml_result = process_image(image_name)[0]
-  if is_animal_image(ml_result):
-    print('Animal!')
-    send_to_notehub(ml_result['confidence'])
-  else:
-    os.remove(image_name)
+  init_notecard()
+  while True:
+    sensor_state = GPIO.input(pir_sensor_pin)
+    if sensor_state == GPIO.HIGH:
+      print('Motion detected')
+      image_name = take_picture()
+      ml_result = process_image(image_name)[0]
+      if is_animal_image(ml_result):
+        print('Animal detected!')
+        send_to_notehub(ml_result['confidence'])
+      else:
+        print('No animal detected')
+        os.remove(image_name)
+
+    time.sleep(5)
+
+main()
