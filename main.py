@@ -31,7 +31,7 @@ def process_image(file_name):
   write_results_to_file(results, output_path)
   return results
 
-def process_single_image(file_name):
+def draw_detection_boxes(file_name):
   load_and_run_detector(
     model,
     [file_name],
@@ -39,16 +39,16 @@ def process_single_image(file_name):
   )
 
 def get_image_name():
-  path, dirs, files = next(os.walk("images"))
+  path, dirs, files = next(os.walk('images'))
   file_count = len(files)
   return 'images/' + str(file_count + 1) + '.jpg'
 
 def take_picture():
   camera = picamera.PiCamera()
-  camera.resolution = (500, 500)
+  camera.resolution = (400, 400)
   camera.start_preview()
   time.sleep(2)
-  camera.rotation = 180
+  camera.rotation = 90
   image_name = get_image_name()
   camera.capture(image_name)
   camera.stop_preview()
@@ -63,12 +63,12 @@ def init_notecard():
   res = card.Transaction(req)
   print(res)
 
-def send_to_notehub(confidence):
+def send_to_notehub():
   req = {"req": "note.add"}
   req["file"] = "twilio.qo"
   req["sync"] = True
   req["body"] = {
-    "body": "Spotted an animal with " + confidence + "% confidence",
+    "body": "Spotted an animal!",
     "from": keys.sms_from,
     "to": keys.sms_to,
   }
@@ -91,7 +91,7 @@ def main():
       ml_result = process_image(image_name)[0]
       if is_animal_image(ml_result):
         print('Animal detected!')
-        send_to_notehub(ml_result['confidence'])
+        send_to_notehub()
       else:
         print('No animal detected')
         os.remove(image_name)

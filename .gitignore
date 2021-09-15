@@ -1,4 +1,7 @@
+__pycache__
 images/
 keys.py
+keys.pyc
 md_v4.1.0.pb
+nohup.out
 output.json
