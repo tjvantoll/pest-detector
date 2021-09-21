@@ -1,6 +1,8 @@
 # Pest Detector
 
-Work in progress 👷‍♂️👷‍♀️
+A project that uses a Raspberry Pi, a Pi camera, and some machine learning to take pictures of animals in my yard.
+
+Read the full writeup for instructions on how to use the code in this repo at <https://www.hackster.io/tjvantoll/what-s-destroying-my-yard-pest-detection-with-raspberry-pi-890c3a>.
 
 ## References
 
